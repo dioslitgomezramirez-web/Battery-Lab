@@ -146,6 +146,12 @@ input, select, textarea { font-family: inherit; }
 .dot.danger { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
 .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+#btnToggleRight { display: none; }
+
+.panel-backdrop {
+  display: none; position: fixed; inset: 56px 0 0 0; background: rgba(5,6,8,0.45); z-index: 45;
+}
+.panel-backdrop.show { display: block; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -194,6 +200,7 @@ input, select, textarea { font-family: inherit; }
   display: grid;
   grid-template-columns: 320px 1fr 360px;
   height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
   overflow: hidden;
 }
 
@@ -347,7 +354,7 @@ input, select, textarea { font-family: inherit; }
 .flow-toggle button.active { background: var(--copper); color: #0D0F12; font-weight: 600; }
 
 .info-popover {
-  position: absolute; z-index: 30; max-width: 300px;
+  position: absolute; top: 14px; left: 14px; z-index: 30; max-width: min(300px, calc(100% - 28px));
   background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
   box-shadow: var(--shadow-pop); padding: 14px 16px;
 }
@@ -501,20 +508,24 @@ input, select, textarea { font-family: inherit; }
    ============================================================ */
 @media (max-width: 1180px) {
   .workbench { grid-template-columns: 300px 1fr 0; }
-  .panel-right { position: fixed; right: 0; top: 56px; bottom: 0; width: 360px; transform: translateX(100%); transition: transform .25s ease; z-index: 50; box-shadow: var(--shadow-pop); }
+  .panel-right { position: fixed; right: 0; top: 56px; bottom: 0; width: min(360px, 92vw); transform: translateX(100%); transition: transform .25s ease; z-index: 50; box-shadow: var(--shadow-pop); }
   .panel-right.open { transform: translateX(0); }
+  #btnToggleRight { display: inline-flex; }
 }
 
 @media (max-width: 860px) {
+  :root { --mtabs-h: calc(48px + env(safe-area-inset-bottom, 0px)); }
   .ticker { display: none; }
   .workbench { grid-template-columns: 0 1fr 0; }
-  .panel-left { position: fixed; left: 0; top: 56px; bottom: 48px; width: 300px; transform: translateX(-100%); transition: transform .25s ease; z-index: 50; box-shadow: var(--shadow-pop); }
+  .panel-left { position: fixed; left: 0; top: 56px; bottom: var(--mtabs-h); width: min(300px, 88vw); transform: translateX(-100%); transition: transform .25s ease; z-index: 50; box-shadow: var(--shadow-pop); }
   .panel-left.open { transform: translateX(0); }
-  .panel-right { bottom: 48px; }
-  .workbench { height: calc(100vh - 56px - 48px); }
+  .panel-right { bottom: var(--mtabs-h); }
+  .workbench { height: calc(100vh - 56px - var(--mtabs-h)); height: calc(100dvh - 56px - var(--mtabs-h)); }
   .mobile-tabs {
-    display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 48px; z-index: 55;
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: var(--mtabs-h); z-index: 55;
     background: var(--bg-panel); border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-sizing: border-box;
   }
   .mobile-tabs button {
     flex: 1; background: none; border: none; color: var(--text-tertiary); display: flex; flex-direction: column;
@@ -526,8 +537,49 @@ input, select, textarea { font-family: inherit; }
   .brand-text span { display: none; }
 }
 
+/* ---- Teléfonos compactos (~360-430px de ancho, ej. 6.1") ---- */
+@media (max-width: 480px) {
+  .topbar { padding: 0 10px; gap: 10px; }
+  .brand-mark svg { width: 26px; height: 26px; }
+  .brand-text b { font-size: 14px; }
+  .btn { padding: 8px 10px; }
+  .dropdown-menu { min-width: 190px; right: -10px; }
+
+  .cfg-header { padding: 12px 14px; }
+  .cfg-body { padding: 2px 14px 14px; }
+  .field-row { flex-direction: column; gap: 0; }
+  .field-row .field { flex: none; }
+
+  .stage-tabs { padding: 8px 10px 0; gap: 0; overflow-x: auto; }
+  .stage-tab { padding: 8px 10px; font-size: 11.5px; flex-shrink: 0; }
+
+  .dash-wrap, .charts-wrap, .comparator-wrap, .project-wrap { padding: 14px; }
+  .dash-grid { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 9px; }
+  .metric-card { padding: 12px; }
+  .metric-value { font-size: 18px; }
+  .gauge-grid { grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 9px; }
+  .gauge-ring { width: 72px; height: 72px; }
+  .gauge-ring svg { width: 72px; height: 72px; }
+  .charts-wrap { grid-template-columns: 1fr; gap: 12px; }
+  .chart-card { padding: 14px; }
+
+  .viewer-hud.bottom-left .legend-row:last-child { display: none; }
+  .viewer-hud.bottom-left { max-width: 54vw; }
+  .viewer-hud.bottom-left .hud-card { padding: 8px 10px; }
+  .legend-row { font-size: 9.5px; }
+  .viewer-hud.top-right .hud-btn { width: 30px; height: 30px; }
+  .info-popover { max-width: min(260px, calc(100% - 24px)); padding: 12px 14px; }
+
+  .modal-box { max-width: 100%; }
+  .modal-body { padding: 14px 16px; }
+
+  .right-tab { font-size: 10px; padding: 11px 4px; }
+  .chat-msg { max-width: 96%; font-size: 12px; }
+  .phone-card { padding: 10px; }
+}
+
 @media (min-width: 861px) {
-  .workbench { height: calc(100vh - 56px); }
+  .workbench { height: calc(100vh - 56px); height: calc(100dvh - 56px); }
 }
 
 </style>
@@ -595,6 +647,7 @@ input, select, textarea { font-family: inherit; }
     </div>
     <div class="ticker" id="ticker"><!-- poblado por JS --></div>
     <div class="topbar-actions">
+      <button class="btn icon-only" id="btnToggleRight" title="Panel IA / Comparador"><svg><use href="#icon-chat"/></svg></button>
       <button class="btn icon-only" id="btnTheme" title="Cambiar tema"><svg><use href="#icon-moon"/></svg></button>
       <button class="btn" id="btnSave"><svg><use href="#icon-save"/></svg><span class="btn-text">Guardar</span></button>
       <div class="dropdown-wrap">
@@ -767,6 +820,9 @@ input, select, textarea { font-family: inherit; }
           <div class="section-title"><svg><use href="#icon-gauge"/></svg>Resultados de la simulación</div>
           <div class="dash-grid" id="dashGrid"></div>
 
+          <div class="section-title"><svg><use href="#icon-battery"/></svg>Autonomía exacta por perfil de uso</div>
+          <div class="gauge-grid" id="autonomyBreakdown"></div>
+
           <div class="section-title"><svg><use href="#icon-shield"/></svg>Seguridad, vida útil y rendimiento</div>
           <div class="gauge-grid" id="gaugeGrid"></div>
 
@@ -844,6 +900,8 @@ input, select, textarea { font-family: inherit; }
   </nav>
 
 </div>
+
+<div class="panel-backdrop" id="panelBackdrop"></div>
 
 <!-- ============================================================ MODALES ============================================================ -->
 <div class="modal-overlay" id="materialInfoModal" hidden>
@@ -1099,23 +1157,33 @@ const MATERIALS = {
   carcasa: {
     bolsa_aluminio: {
       id: 'bolsa_aluminio', nombre: 'Bolsa de aluminio laminado (pouch)',
-      densidad: 1.8, costoUnidad: 4, proteccion: 5, flexibilidad: 9,
-      descripcion: 'Lámina de aluminio laminada entre capas de polímero. Es la carcasa de prácticamente todos los smartphones actuales: ligera y adaptable a formas delgadas, con protección mecánica moderada.'
+      densidad: 1.8, costoUnidad: 4, proteccion: 5, flexibilidad: 9, metalico: false,
+      descripcion: 'Lámina de aluminio laminada entre capas de polímero. Es la carcasa de prácticamente todos los smartphones actuales: ligera y adaptable a formas delgadas, con protección mecánica moderada. Acabado mate, no metálico brillante, por su cara externa de polímero.'
     },
     lata_aluminio: {
       id: 'lata_aluminio', nombre: 'Lata de aluminio (rígida)',
-      densidad: 2.7, costoUnidad: 6, proteccion: 8, flexibilidad: 2,
+      densidad: 2.7, costoUnidad: 6, proteccion: 8, flexibilidad: 2, metalico: true,
       descripcion: 'Carcasa metálica rígida cilíndrica o prismática. Mejor contención mecánica y de presión interna, a costa de peso y de la delgadez extrema que exige el diseño de un teléfono.'
     },
     lata_acero: {
       id: 'lata_acero', nombre: 'Lata de acero',
-      densidad: 7.8, costoUnidad: 5, proteccion: 10, flexibilidad: 1,
+      densidad: 7.8, costoUnidad: 5, proteccion: 10, flexibilidad: 1, metalico: true,
       descripcion: 'Máxima resistencia mecánica y a la presión interna, propia de celdas industriales robustas. Su peso la hace poco práctica en teléfonos, salvo diseños ultra-resistentes especializados.'
     },
     polimero_rigido: {
       id: 'polimero_rigido', nombre: 'Polímero rígido compuesto',
-      densidad: 1.4, costoUnidad: 3, proteccion: 6, flexibilidad: 3,
+      densidad: 1.4, costoUnidad: 3, proteccion: 6, flexibilidad: 3, metalico: false,
       descripcion: 'Compuesto plástico rígido ligero, explorado en algunos prototipos de celdas de estado sólido que no requieren el mismo sellado hermético que un electrolito líquido.'
+    },
+    titanio: {
+      id: 'titanio', nombre: 'Titanio',
+      densidad: 4.43, costoUnidad: 11, proteccion: 9, flexibilidad: 2, metalico: true,
+      descripcion: 'Carcasa metálica de grado aeroespacial, usada en los marcos de los smartphones más premium. Relación resistencia/peso excelente y muy buena resistencia a la corrosión, con un coste de mecanizado notablemente mayor que el aluminio.'
+    },
+    magnesio: {
+      id: 'magnesio', nombre: 'Aleación de magnesio',
+      densidad: 1.8, costoUnidad: 7, proteccion: 7, flexibilidad: 2, metalico: true,
+      descripcion: 'Aleación metálica más ligera que el aluminio con buena disipación térmica, usada en algunos chasis de gama alta y equipos donde el peso es crítico. Algo más sensible a la corrosión que el aluminio o el titanio si no lleva recubrimiento.'
     }
   }
 };
@@ -1518,6 +1586,7 @@ const Sim = (() => {
 
 const Viewer3D = (() => {
   let scene, camera, renderer, controls, container;
+  let lastW = 0, lastH = 0;
   let modelGroup, tabAnodo, tabCatodo;
   let electronCurve, ionGaps = [];
   let electronParticles = [], ionParticles = [];
@@ -1536,17 +1605,37 @@ const Viewer3D = (() => {
     electron: 0xE3985E, ion: 0x4DD4E8
   };
 
-  function colorAnodo(id) {
-    return { grafito: COLOR.grafito, silicio_carbono: COLOR.sic, silicio_puro: COLOR.sic,
-      litio_metalico: COLOR.litioMetal, carbono_duro: COLOR.carbonoduro, lto: 0x555b63 }[id] || COLOR.grafito;
+  function hashColor(str, sat, light) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    const c = new THREE.Color();
+    c.setHSL((h % 360) / 360, sat, light);
+    return c.getHex();
   }
-  function colorCatodo(id) {
-    return { lco: COLOR.lco, nmc622: COLOR.nmc, nmc811: COLOR.nmc, lfp: COLOR.lfp,
-      nca: COLOR.nca, sodio_np: COLOR.sodio, azufre: COLOR.azufre }[id] || COLOR.nmc;
+
+  function colorAnodo(mat) {
+    const known = { grafito: COLOR.grafito, silicio_carbono: COLOR.sic, silicio_puro: COLOR.sic,
+      litio_metalico: COLOR.litioMetal, carbono_duro: COLOR.carbonoduro, lto: 0x555b63 };
+    if (known[mat.id] !== undefined) return known[mat.id];
+    return hashColor(mat.nombre || mat.id, 0.28, 0.26);
   }
-  function colorCarcasa(id) {
-    return { bolsa_aluminio: COLOR.pouch, lata_aluminio: COLOR.canAl,
-      lata_acero: COLOR.canSteel, polimero_rigido: COLOR.polymer }[id] || COLOR.pouch;
+  function colorCatodo(mat) {
+    const known = { lco: COLOR.lco, nmc622: COLOR.nmc, nmc811: COLOR.nmc, lfp: COLOR.lfp,
+      nca: COLOR.nca, sodio_np: COLOR.sodio, azufre: COLOR.azufre };
+    if (known[mat.id] !== undefined) return known[mat.id];
+    return hashColor(mat.nombre || mat.id, 0.42, 0.4);
+  }
+  /* Apariencia de la carcasa (y de cualquier material personalizado) derivada de sus
+     propiedades reales: metálico o no, en vez de una lista fija de colores por id. */
+  function aparienciaCarcasa(mat) {
+    if (mat.metalico) {
+      const known = { lata_aluminio: 0xC7CCD3, lata_acero: 0x8A8F97, titanio: 0x9198A0, magnesio: 0xBFC9CA };
+      const color = known[mat.id] !== undefined ? known[mat.id] : hashColor(mat.nombre || mat.id, 0.05, 0.64);
+      return { color, metalness: 0.85, roughness: 0.28 };
+    }
+    const known = { bolsa_aluminio: 0xB8BCC4, polimero_rigido: 0xEDE7DC };
+    const color = known[mat.id] !== undefined ? known[mat.id] : hashColor(mat.nombre || mat.id, 0.12, 0.58);
+    return { color, metalness: 0.06, roughness: 0.8 };
   }
 
   function init(containerEl, callbacks) {
@@ -1554,13 +1643,16 @@ const Viewer3D = (() => {
     onInfoClick = (callbacks && callbacks.onInfoClick) || null;
     clock = new THREE.Clock();
 
+    const w0 = Math.max(container.clientWidth, 1);
+    const h0 = Math.max(container.clientHeight, 1);
+
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera = new THREE.PerspectiveCamera(38, w0 / h0, 0.1, 100);
     camera.position.set(5.5, 4.2, 6.5);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w0, h0);
     renderer.outputEncoding = THREE.sRGBEncoding;
     container.appendChild(renderer.domElement);
 
@@ -1591,13 +1683,32 @@ const Viewer3D = (() => {
     renderer.domElement.addEventListener('click', onClick);
 
     window.addEventListener('resize', resize);
+
+    // ResizeObserver detecta cambios de tamaño del propio contenedor por cualquier
+    // causa (no solo el evento resize de la ventana): apertura de paneles, cambio
+    // de orientación, la barra de direcciones del móvil, fuentes que terminan de
+    // cargar y desplazan el layout, etc. Es la causa más probable de que el visor
+    // quedara en blanco en pantallas pequeñas: el contenedor medía 0x0 en el
+    // instante exacto de crear el canvas y nunca se volvía a ajustar.
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => resize());
+      ro.observe(container);
+    }
+    // Reintentos cortos adicionales por si el layout inicial aún no estaba listo
+    // en el momento de construir el renderer (típico justo tras DOMContentLoaded).
+    setTimeout(resize, 60);
+    setTimeout(resize, 300);
+    setTimeout(resize, 900);
+
     animate();
   }
 
   function resize() {
     if (!container || !renderer) return;
     const w = container.clientWidth, h = container.clientHeight;
-    if (w === 0 || h === 0) return;
+    if (w < 2 || h < 2) return;
+    if (Math.abs(w - lastW) < 1 && Math.abs(h - lastH) < 1) return;
+    lastW = w; lastH = h;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
@@ -1636,13 +1747,87 @@ const Viewer3D = (() => {
     mesh.add(line);
   }
 
+  /* Contorno 2D real de cada forma de batería (vista desde arriba). Esto es lo que
+     antes faltaba: "forma" solo afectaba el cálculo de volumen, nunca se veía. */
+  function crossSectionShape(forma, w, d) {
+    const shape = new THREE.Shape();
+    const hw = w / 2, hd = d / 2;
+    if (forma === 'forma_l') {
+      const nw = w * 0.38, nd = d * 0.38;
+      shape.moveTo(-hw, -hd);
+      shape.lineTo(hw, -hd);
+      shape.lineTo(hw, hd - nd);
+      shape.lineTo(hw - nw, hd - nd);
+      shape.lineTo(hw - nw, hd);
+      shape.lineTo(-hw, hd);
+      shape.closePath();
+    } else if (forma === 'escalonada') {
+      const nw = w * 0.26, nd = d * 0.46;
+      shape.moveTo(-hw, -hd);
+      shape.lineTo(hw - nw, -hd);
+      shape.lineTo(hw - nw, -hd + nd);
+      shape.lineTo(hw, -hd + nd);
+      shape.lineTo(hw, hd);
+      shape.lineTo(-hw + nw, hd);
+      shape.lineTo(-hw + nw, hd - nd);
+      shape.lineTo(-hw, hd - nd);
+      shape.closePath();
+    } else if (forma === 'curva') {
+      const rad = Math.min(w, d) * 0.18;
+      shape.moveTo(-hw + rad, -hd);
+      shape.lineTo(hw - rad, -hd);
+      shape.quadraticCurveTo(hw, -hd, hw, -hd + rad);
+      shape.lineTo(hw, hd - rad);
+      shape.quadraticCurveTo(hw, hd, hw - rad, hd);
+      shape.lineTo(-hw + rad, hd);
+      shape.quadraticCurveTo(-hw, hd, -hw, hd - rad);
+      shape.lineTo(-hw, -hd + rad);
+      shape.quadraticCurveTo(-hw, -hd, -hw + rad, -hd);
+    } else {
+      shape.moveTo(-hw, -hd);
+      shape.lineTo(hw, -hd);
+      shape.lineTo(hw, hd);
+      shape.lineTo(-hw, hd);
+      shape.closePath();
+    }
+    return shape;
+  }
+
+  function buildLayerGeometry(forma, w, h, d) {
+    if (!forma || forma === 'prismatica') return new THREE.BoxGeometry(w, h, d);
+    const shape = crossSectionShape(forma, w, d);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: 10 });
+    geo.rotateX(-Math.PI / 2);
+    geo.translate(0, -h / 2, 0);
+    return geo;
+  }
+
+  function makeShapedLayer(forma, w, h, d, color, opts) {
+    opts = opts || {};
+    const geo = buildLayerGeometry(forma, w, h, d);
+    const mat = new THREE.MeshStandardMaterial({
+      color, roughness: opts.roughness !== undefined ? opts.roughness : 0.55,
+      metalness: opts.metalness !== undefined ? opts.metalness : 0.35,
+      transparent: !!opts.transparent, opacity: opts.opacity !== undefined ? opts.opacity : 1,
+      side: THREE.DoubleSide
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    if (opts.info) mesh.userData.info = opts.info;
+    return mesh;
+  }
+
   /* Reconstruye el modelo 3D a partir de config + resultados de simulación */
   function rebuild(config, r) {
     clearGroup();
 
-    const W = 3.2, H = 0.42; // ancho y alto de referencia visual fijos (esquemático)
+    // Dimensiones de referencia (el diseño por defecto de la app) usadas para escalar
+    // el modelo visual de forma proporcional a los mm reales que eligió el usuario.
+    const REF_LARGO = 90, REF_ESPESOR = 4.3;
+    const escala = clamp(config.largoMm / REF_LARGO, 0.55, 2.0);
+    const W = 3.2 * escala;
     const aspectRatio = config.anchoMm / config.largoMm;
-    const depth = clamp(W * aspectRatio, 1.6, 2.6);
+    const depth = clamp(W * aspectRatio, W * 0.45, W * 1.25);
+    const H = 0.42 * clamp(config.espesorMm / REF_ESPESOR, 0.35, 3.2);
 
     const nVisual = Math.max(4, Math.min(10, Math.round(r.geometria.numCapas / 3)));
     const layerH = H / (nVisual * 2 + 1);
@@ -1660,44 +1845,50 @@ const Viewer3D = (() => {
     const infoColC = { titulo: r.materiales.colectorC.nombre, texto: r.materiales.colectorC.descripcion, tipo: 'Colector (cátodo)' };
     const infoCarcasa = { titulo: r.materiales.carcasa.nombre, texto: r.materiales.carcasa.descripcion, tipo: 'Carcasa' };
 
+    const colorAnodoVal = colorAnodo(r.materiales.anodo);
+    const colorCatodoVal = colorCatodo(r.materiales.catodo);
+
     for (let i = 0; i < nVisual; i++) {
-      const anodoMesh = makeBox(W * 0.92, layerH, depth * 0.92, colorAnodo(r.materiales.anodo.id), { info: infoAnodo, roughness: 0.7, metalness: 0.1 });
+      const anodoMesh = makeShapedLayer(config.forma, W * 0.92, layerH, depth * 0.92, colorAnodoVal, { info: infoAnodo, roughness: 0.7, metalness: 0.1 });
       anodoMesh.position.y = y + layerH / 2; modelGroup.add(anodoMesh); addEdges(anodoMesh);
       y += layerH;
 
-      const colAMesh = makeBox(W * 0.92, layerH * 0.28, depth * 0.92, COLOR.cobre, { info: infoColA, roughness: 0.35, metalness: 0.85 });
+      const colAMesh = makeShapedLayer(config.forma, W * 0.92, layerH * 0.28, depth * 0.92, COLOR.cobre, { info: infoColA, roughness: 0.35, metalness: 0.85 });
       colAMesh.position.y = y + (layerH * 0.28) / 2; modelGroup.add(colAMesh);
       y += layerH * 0.28;
 
       const gapY0 = y;
-      const sepMesh = makeBox(W * 0.94, gapH, depth * 0.94, r.esSolido ? COLOR.electrolitoSolido : COLOR.separador,
+      const sepMesh = makeShapedLayer(config.forma, W * 0.94, gapH, depth * 0.94, r.esSolido ? COLOR.electrolitoSolido : COLOR.separador,
         { info: r.esSolido ? infoSep : infoElectrolito, transparent: true, opacity: r.esSolido ? 0.55 : 0.38, roughness: 0.2, metalness: 0.05 });
       sepMesh.position.y = y + gapH / 2; modelGroup.add(sepMesh);
       ionGaps.push({ yCenter: sepMesh.position.y, halfW: W * 0.4, halfD: depth * 0.4 });
       y += gapH;
 
-      const colCMesh = makeBox(W * 0.92, layerH * 0.28, depth * 0.92, COLOR.aluminio, { info: infoColC, roughness: 0.35, metalness: 0.85 });
+      const colCMesh = makeShapedLayer(config.forma, W * 0.92, layerH * 0.28, depth * 0.92, COLOR.aluminio, { info: infoColC, roughness: 0.35, metalness: 0.85 });
       colCMesh.position.y = y + (layerH * 0.28) / 2; modelGroup.add(colCMesh);
       y += layerH * 0.28;
 
-      const catodoMesh = makeBox(W * 0.92, layerH, depth * 0.92, colorCatodo(r.materiales.catodo.id), { info: infoCatodo, roughness: 0.6, metalness: 0.15 });
+      const catodoMesh = makeShapedLayer(config.forma, W * 0.92, layerH, depth * 0.92, colorCatodoVal, { info: infoCatodo, roughness: 0.6, metalness: 0.15 });
       catodoMesh.position.y = y + layerH / 2; modelGroup.add(catodoMesh); addEdges(catodoMesh);
       y += layerH;
     }
 
     /* Tabs de conexión (colectores salientes) */
-    tabAnodo = makeBox(0.5, 0.09, 0.32, COLOR.cobre, { info: infoColA, metalness: 0.9, roughness: 0.25 });
-    tabAnodo.position.set(-W / 2 - 0.22, totalStackH * 0.3, depth / 2 - 0.4);
+    tabAnodo = makeBox(0.5 * escala, 0.09 * Math.max(escala, 0.7), 0.32 * escala, COLOR.cobre, { info: infoColA, metalness: 0.9, roughness: 0.25 });
+    tabAnodo.position.set(-W / 2 - 0.22 * escala, totalStackH * 0.3, -depth / 2 + 0.4 * escala);
     modelGroup.add(tabAnodo);
 
-    tabCatodo = makeBox(0.5, 0.09, 0.32, COLOR.aluminio, { info: infoColC, metalness: 0.9, roughness: 0.25 });
-    tabCatodo.position.set(W / 2 + 0.22, totalStackH * 0.3, depth / 2 - 0.4);
+    tabCatodo = makeBox(0.5 * escala, 0.09 * Math.max(escala, 0.7), 0.32 * escala, COLOR.aluminio, { info: infoColC, metalness: 0.9, roughness: 0.25 });
+    tabCatodo.position.set(W / 2 + 0.22 * escala, totalStackH * 0.3, -depth / 2 + 0.4 * escala);
     modelGroup.add(tabCatodo);
 
-    /* Carcasa envolvente */
+    /* Carcasa envolvente — su apariencia (color, brillo metálico) sale de las
+       propiedades reales del material elegido, no de una lista fija por id, y su
+       silueta sigue la forma real elegida (prismática, L, escalonada o curva). */
     const casingH = totalStackH * 1.22;
-    const carcasaMesh = makeBox(W * 1.08, casingH, depth * 1.1, colorCarcasa(r.materiales.carcasa.id),
-      { info: infoCarcasa, transparent: true, opacity: xrayOn ? 0.12 : 0.9, roughness: 0.4, metalness: 0.5 });
+    const apCarcasa = aparienciaCarcasa(r.materiales.carcasa);
+    const carcasaMesh = makeShapedLayer(config.forma, W * 1.08, casingH, depth * 1.1, apCarcasa.color,
+      { info: infoCarcasa, transparent: true, opacity: xrayOn ? 0.12 : 0.9, roughness: apCarcasa.roughness, metalness: apCarcasa.metalness });
     carcasaMesh.name = 'carcasa';
     modelGroup.add(carcasaMesh);
     addEdges(carcasaMesh, 0x000000);
@@ -1740,13 +1931,31 @@ const Viewer3D = (() => {
       }
     });
 
-    fitCameraToModel(W, H, depth);
+    fitCameraToModel(carcasaMesh, tabAnodo, tabCatodo);
   }
 
-  function fitCameraToModel(W, H, depth) {
-    const dist = Math.max(W, depth) * 1.9 + 2;
-    controls.minDistance = dist * 0.45;
-    controls.maxDistance = dist * 2.6;
+  function fitCameraToModel(carcasaMesh, tabAnodo, tabCatodo) {
+    const box = new THREE.Box3().setFromObject(carcasaMesh);
+    box.expandByObject(tabAnodo);
+    box.expandByObject(tabCatodo);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const center = new THREE.Vector3(); box.getCenter(center);
+    const maxDim = Math.max(size.x, size.y, size.z, 0.4);
+    const dist = maxDim * 2.3 + 1.4;
+
+    const currentTarget = controls.target.clone();
+    let dir = camera.position.clone().sub(currentTarget);
+    if (dir.lengthSq() < 0.0001) dir.set(0.62, 0.47, 0.72);
+    dir.normalize();
+
+    camera.position.copy(center.clone().add(dir.multiplyScalar(dist)));
+    controls.target.copy(center);
+    controls.minDistance = dist * 0.32;
+    controls.maxDistance = dist * 3.4;
+    camera.near = Math.max(0.01, maxDim * 0.02);
+    camera.far = dist * 20;
+    camera.updateProjectionMatrix();
+    controls.update();
   }
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
@@ -1821,6 +2030,14 @@ const Viewer3D = (() => {
 const Assistant = (() => {
 
   function fmt(n, d = 1) { return Number(n).toFixed(d); }
+  function fmtHorasMin(h) {
+    const totalMin = Math.round(h * 60);
+    const hh = Math.floor(totalMin / 60);
+    const mm = totalMin % 60;
+    if (hh <= 0) return `${mm} min`;
+    if (mm === 0) return `${hh} h`;
+    return `${hh} h ${mm} min`;
+  }
 
   function recomendaciones(config, r) {
     const recs = [];
@@ -1840,7 +2057,7 @@ const Assistant = (() => {
     if (r.autonomiaH < 18) {
       recs.push({
         area: 'Autonomía',
-        texto: `La autonomía estimada (${fmt(r.autonomiaH)} h en uso medio) es baja. Puedes ganar autonomía aumentando el volumen de la celda, usando un ánodo de silicio-carbono, o subiendo la relación N/P para aprovechar mejor el cátodo.`
+        texto: `La autonomía estimada (${fmtHorasMin(r.autonomiaH)} en uso medio) es baja. Puedes ganar autonomía aumentando el volumen de la celda, usando un ánodo de silicio-carbono, o subiendo la relación N/P para aprovechar mejor el cátodo.`
       });
     }
     if (r.densidadEnergeticaWhL < 550) {
@@ -1938,7 +2155,7 @@ const Assistant = (() => {
         recomendaciones(config, r).filter(x => x.area === 'Seguridad').map(x => x.texto).join('\n') || 'No se detectan problemas de seguridad relevantes con esta combinación de materiales.';
     }
     if (/(autonom|dura|aguanta|carga rápida|carga rapida|tiempo de carga)/.test(q)) {
-      return `Autonomía estimada (uso medio): ${fmt(r.autonomiaH, 1)} h. Tiempo de carga estimado: ${fmt(r.tiempoCargaH, 1)} h.\n\n` +
+      return `Autonomía estimada (uso medio): ${fmtHorasMin(r.autonomiaH)}. Tiempo de carga estimado: ${fmt(r.tiempoCargaH, 1)} h.\n\n` +
         recomendaciones(config, r).filter(x => x.area === 'Autonomía' || x.area === 'Carga rápida').map(x => x.texto).join('\n');
     }
     if (/(compar|samsung|iphone|apple|xiaomi|oppo|vivo|honor|motorola|asus|sony|huawei|lynor|mercado|otros móviles|otros moviles)/.test(q)) {
@@ -1998,6 +2215,20 @@ const Assistant = (() => {
   const $ = (id) => document.getElementById(id);
   const fmt = (n, d = 1) => Number(n).toFixed(d);
   const fmtInt = (n) => Math.round(n).toLocaleString('es-ES');
+  function fmtHorasMin(h) {
+    const totalMin = Math.round(h * 60);
+    const hh = Math.floor(totalMin / 60);
+    const mm = totalMin % 60;
+    if (hh <= 0) return `${mm} min`;
+    if (mm === 0) return `${hh} h`;
+    return `${hh} h ${mm} min`;
+  }
+  function autonomiaPorPerfil(r) {
+    return Object.entries(PERFILES_USO).map(([key, p]) => ({
+      key, nombre: p.nombre,
+      horas: (r.energiaWh * (r.eficienciaDescarga / 100)) / p.consumoW
+    }));
+  }
 
   /* ============================================================
      POBLADO DE SELECTS
@@ -2147,6 +2378,7 @@ const Assistant = (() => {
 
     renderTicker(results);
     renderDashboard(results);
+    renderAutonomyBreakdown(results);
     renderGauges(results);
     renderAlerts(alerts);
     renderCharts(results);
@@ -2189,7 +2421,7 @@ const Assistant = (() => {
       metricCard('icon-gauge', '', 'Densidad de potencia', fmtInt(r.densidadPotenciaWKg), 'W/kg'),
       metricCard('icon-package', '', 'Peso total', fmt(r.masaTotalG, 1), 'g'),
       metricCard('icon-box', '', 'Volumen ocupado', fmt(r.geometria.volumenTotalCm3, 2), 'cm³', r.caberEnTelefono ? 'Cabe en un smartphone típico' : 'Excede el hueco típico (~' + r.volumenTipicoTelefono + ' cm³)'),
-      metricCard('icon-battery', 'safe', 'Autonomía estimada', fmt(r.autonomiaH, 1), 'h', r.perfil.nombre),
+      metricCard('icon-battery', 'safe', 'Autonomía estimada', fmtHorasMin(r.autonomiaH), '', 'Uso ' + r.perfil.nombre.split('(')[0].trim().toLowerCase()),
       metricCard('icon-zap', 'copper', 'Tiempo de carga', fmt(r.tiempoCargaH, 1), 'h', fmt(config.velocidadCargaC, 1) + 'C'),
       metricCard('icon-wind', '', 'Resistencia interna', fmt(r.resistenciaInternaMOhm, 0), 'mΩ'),
       metricCard('icon-thermo', r.riesgoSobrecalentamiento === 'alto' ? 'danger' : (r.riesgoSobrecalentamiento === 'medio' ? 'warn' : 'safe'), 'Temperatura en uso', fmt(r.temperaturaOperacionC, 1), '°C', 'Riesgo de sobrecalentamiento: ' + r.riesgoSobrecalentamiento),
@@ -2234,6 +2466,17 @@ const Assistant = (() => {
       gaugeCard('Eficiencia', r.eficienciaDescarga, fmt(r.eficienciaDescarga, 0) + '%', 'ida y vuelta', ionColor, ionColor),
       gaugeCard('Sostenibilidad', 100 - r.impacto, Math.round(100 - r.impacto), r.categoriaImpacto + ' impacto', segColor(100 - r.impacto), segColor(100 - r.impacto))
     ].join('');
+  }
+
+  function renderAutonomyBreakdown(r) {
+    const perfiles = autonomiaPorPerfil(r);
+    $('autonomyBreakdown').innerHTML = perfiles.map(p => `
+      <div class="gauge-card">
+        <div class="metric-icon" style="margin-bottom:8px"><svg width="20" height="20"><use href="#icon-battery"/></svg></div>
+        <div class="mono" style="font-size:19px;font-weight:700;${p.nombre === r.perfil.nombre ? 'color:var(--copper-bright)' : ''}">${fmtHorasMin(p.horas)}</div>
+        <div class="gauge-label" style="margin-top:6px">${p.nombre}</div>
+      </div>
+    `).join('');
   }
 
   function renderAlerts(alerts) {
@@ -2354,7 +2597,7 @@ const Assistant = (() => {
     $('yourDesignSummary').innerHTML = `
       <div style="font-size:13px;font-weight:600;margin-bottom:4px">${r.tipoBat.nombre}</div>
       <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">${r.materiales.anodo.nombre} · ${r.materiales.catodo.nombre}</div>
-      <div class="mono" style="font-size:12px;color:var(--copper-bright)">${fmtInt(r.capacidadTotalMah)} mAh · ${fmtInt(r.densidadEnergeticaWhL)} Wh/L · ${fmt(r.autonomiaH, 1)} h</div>
+      <div class="mono" style="font-size:12px;color:var(--copper-bright)">${fmtInt(r.capacidadTotalMah)} mAh · ${fmtInt(r.densidadEnergeticaWhL)} Wh/L · ${fmtHorasMin(r.autonomiaH)}</div>
     `;
   }
 
@@ -2518,6 +2761,17 @@ const Assistant = (() => {
         <option value="ninguno">Ninguno</option><option value="bajo">Bajo</option><option value="medio" selected>Medio</option><option value="alto">Alto</option></select>`;
       container.appendChild(div);
     }
+    if (categoria === 'carcasa') {
+      const div = document.createElement('div');
+      div.className = 'field';
+      div.innerHTML = `<label>Acabado</label><select data-key="metalico">
+        <option value="true">Metálico (aluminio, titanio, acero…)</option><option value="false" selected>No metálico (polímero, pouch…)</option></select>`;
+      container.appendChild(div);
+      const help = document.createElement('div');
+      help.className = 'helptext';
+      help.textContent = 'Esto controla cómo se ve la carcasa en el visor 3D: brillo metálico o acabado mate.';
+      container.appendChild(help);
+    }
     $('customMaterialModal').hidden = false;
   }
 
@@ -2527,7 +2781,8 @@ const Assistant = (() => {
     const id = 'custom_' + categoria + '_' + Date.now();
     const mat = { id, nombre, tipo: 'personalizado', descripcion: $('cmDesc').value.trim() || 'Material definido por el usuario.' };
     $('cmFields').querySelectorAll('[data-key]').forEach(el => {
-      mat[el.dataset.key] = el.tagName === 'SELECT' ? el.value : parseFloat(el.value);
+      if (el.dataset.key === 'metalico') mat.metalico = el.value === 'true';
+      else mat[el.dataset.key] = el.tagName === 'SELECT' ? el.value : parseFloat(el.value);
     });
     if (!config.materialesPersonalizados[categoria]) config.materialesPersonalizados[categoria] = {};
     config.materialesPersonalizados[categoria][id] = mat;
@@ -2590,7 +2845,7 @@ const Assistant = (() => {
       ['Capacidad', fmtInt(r.capacidadTotalMah) + ' mAh'], ['Voltaje nominal', fmt(r.voltajeNominal, 2) + ' V'],
       ['Energía', fmt(r.energiaWh, 2) + ' Wh'], ['Densidad energética', fmtInt(r.densidadEnergeticaWhL) + ' Wh/L · ' + fmtInt(r.densidadEnergeticaWhKg) + ' Wh/kg'],
       ['Peso total', fmt(r.masaTotalG, 1) + ' g'], ['Volumen', fmt(r.geometria.volumenTotalCm3, 2) + ' cm³'],
-      ['Autonomía estimada', fmt(r.autonomiaH, 1) + ' h (' + r.perfil.nombre + ')'], ['Tiempo de carga', fmt(r.tiempoCargaH, 1) + ' h'],
+      ['Autonomía estimada', fmtHorasMin(r.autonomiaH) + ' (uso ' + r.perfil.nombre.split('(')[0].trim().toLowerCase() + ')'], ['Tiempo de carga', fmt(r.tiempoCargaH, 1) + ' h'],
       ['Resistencia interna', fmt(r.resistenciaInternaMOhm, 0) + ' mΩ'], ['Temperatura en uso', fmt(r.temperaturaOperacionC, 1) + ' °C'],
       ['Ciclos de vida', r.ciclosVida + ' ciclos'], ['Nivel de seguridad', r.categoriaRiesgo + ' (' + Math.round(r.nivelSeguridad) + '/100)'],
       ['Coste de fabricación', '$' + fmt(r.costoFabricacionUSD, 2)], ['Impacto ambiental', r.categoriaImpacto]
@@ -2746,8 +3001,10 @@ const Assistant = (() => {
         document.querySelectorAll('.mobile-tabs button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const m = btn.dataset.mtab;
+        const opensPanel = m === 'diseno' || m === 'ia' || m === 'comparador';
         $('panelLeft').classList.toggle('open', m === 'diseno');
         $('panelRight').classList.toggle('open', m === 'ia' || m === 'comparador');
+        $('panelBackdrop').classList.toggle('show', opensPanel);
         if (m === '3d') activateStageTab('3d');
         if (m === 'dashboard') activateStageTab('dashboard');
         if (m === 'ia') activateRightTab('ia');
@@ -2810,6 +3067,19 @@ const Assistant = (() => {
     $('cmClose').addEventListener('click', () => $('customMaterialModal').hidden = true);
     $('cmCancel').addEventListener('click', () => $('customMaterialModal').hidden = true);
     $('cmSave').addEventListener('click', saveCustomMaterial);
+
+    $('btnToggleRight').addEventListener('click', () => {
+      const willOpen = !$('panelRight').classList.contains('open');
+      $('panelRight').classList.toggle('open', willOpen);
+      $('panelLeft').classList.remove('open');
+      $('panelBackdrop').classList.toggle('show', willOpen);
+    });
+    $('panelBackdrop').addEventListener('click', () => {
+      $('panelRight').classList.remove('open');
+      $('panelLeft').classList.remove('open');
+      $('panelBackdrop').classList.remove('show');
+      document.querySelectorAll('.mobile-tabs button').forEach(b => b.classList.remove('active'));
+    });
 
     setupCollapsibles();
     setupStageTabs();
