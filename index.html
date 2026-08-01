@@ -383,7 +383,12 @@ input, select, textarea { font-family: inherit; }
 .metric-icon { color: var(--text-tertiary); margin-bottom: 10px; }
 .metric-icon svg { width: 18px; height: 18px; }
 .metric-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
-.metric-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.metric-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; transition: color .3s ease; }
+.metric-card { transition: border-color .25s ease, transform .15s ease; }
+.metric-card:hover { transform: translateY(-1px); border-color: var(--copper-dim); }
+.gauge-ring circle { transition: stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
+.chat-msg { animation: bl-fade-in .25s ease; }
+@keyframes bl-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .metric-value .unit { font-size: 12px; color: var(--text-tertiary); font-weight: 500; margin-left: 3px; }
 .metric-sub { font-size: 10.5px; color: var(--text-tertiary); margin-top: 4px; }
 
@@ -766,7 +771,7 @@ input, select, textarea { font-family: inherit; }
           <div class="field"><label>Forma</label><select id="selForma"></select></div>
           <div class="field-row">
             <div class="field"><label>Nº de celdas <span class="field-val" id="valNumCeldas"></span></label><input type="range" id="rngNumCeldas" min="1" max="8" step="1" value="1"></div>
-            <div class="field"><label>Nº de capas <span class="field-val" id="valNumCapas"></span></label><input type="range" id="rngNumCapas" min="4" max="40" step="1" value="18"></div>
+            <div class="field"><label>Nº de capas <span class="field-val" id="valNumCapas"></span></label><input type="range" id="rngNumCapas" min="4" max="90" step="1" value="18"></div>
           </div>
           <div class="helptext" id="telefonoNecesario" style="background:var(--bg-input);padding:10px;border-radius:8px;margin-top:6px"></div>
           <div class="field" style="margin-top:12px">
@@ -1446,7 +1451,7 @@ const Sim = (() => {
     const volumenUnaCeldaCm3 = largoCm * anchoCm * espesorCm * forma.factorVolumen;
     const volumenTotalCm3 = volumenUnaCeldaCm3 * config.numCeldas;
 
-    const numCapas = clamp(config.numCapas, 2, 60);
+    const numCapas = clamp(config.numCapas, 2, 90);
 
     const fracInactiva = clamp(0.05 + (numCapas - 10) * 0.0025, 0.05, 0.24);
     const fracElectrolito = esSolido ? 0.015 : 0.075;
@@ -2184,6 +2189,31 @@ const Viewer3D = (() => {
 
 const Assistant = (() => {
 
+  function detectarHorasObjetivo(texto) {
+    const m = texto.match(/(\d+(?:[.,]\d+)?)\s*h(?:oras?)?\b/);
+    return m ? parseFloat(m[1].replace(',', '.')) : null;
+  }
+
+  function planParaAutonomia(config, r, horas) {
+    const consumoW = r.perfil.consumoW * r.chip.consumoFactor * r.dispositivo.consumoFactorDispositivo;
+    const eficiencia = r.eficienciaDescarga / 100;
+    const mahNecesario = (horas * consumoW * 1000) / (r.voltajeNominal * eficiencia);
+    const factor = mahNecesario / r.capacidadTotalMah;
+
+    let texto = `Para llegar a ${fmt(horas, 1)} h de autonomía en ${r.dispositivo.nombre.toLowerCase()} con tu perfil de uso actual (${r.perfil.nombre.toLowerCase()}) necesitas aproximadamente ${Math.round(mahNecesario).toLocaleString('es-ES')} mAh — hoy tienes ${Math.round(r.capacidadTotalMah).toLocaleString('es-ES')} mAh.\n\n`;
+
+    if (factor <= 1.03) {
+      texto += 'Buenas noticias: tu diseño actual ya alcanza (o casi) esa autonomía. No hace falta cambiar nada importante.';
+      return texto;
+    }
+
+    texto += `Eso es ${fmt((factor - 1) * 100, 0)}% más capacidad de la que tienes ahora. Tienes tres caminos, y puedes combinarlos:\n\n`;
+    texto += `1) Usa el modo "Autonomía objetivo" del panel de Geometría, pon ${fmt(horas, 1)} h y el sistema ajusta el grosor automáticamente.\n`;
+    texto += `2) Sin agrandar la celda: sube la eficiencia (más capas, electrolito más conductivo) y el voltaje (cátodo NMC811/NCA en vez de uno de menor voltaje) — esto estira las horas con la MISMA capacidad.\n`;
+    texto += `3) Si necesitas espacio real, ${r.geometria.volumenTotalCm3 * factor > r.volumenTipicoTelefono * 1.3 ? 'a este tamaño ya no cabría en un ' + r.dispositivo.nombre.toLowerCase() + ' normal — considera más celdas en paralelo o un dispositivo más grande' : 'aumentar un poco el grosor o el número de celdas debería bastar sin salirte del hueco típico'}.`;
+    return texto;
+  }
+
   function fmt(n, d = 1) { return Number(n).toFixed(d); }
   function fmtHorasMin(h) {
     const totalMin = Math.round(h * 60);
@@ -2302,6 +2332,11 @@ const Assistant = (() => {
   function responder(pregunta, config, r) {
     const q = (pregunta || '').toLowerCase();
 
+    if (/(autonom|dura|aguant|llegar a|quiero|necesito|alcanzar)/.test(q)) {
+      const horas = detectarHorasObjetivo(q);
+      if (horas && horas > 0 && horas < 500) return planParaAutonomia(config, r, horas);
+    }
+
     const materialKeys = [
       ['grafito', 'anodo', 'grafito'], ['silicio-carbono', 'anodo', 'silicio_carbono'], ['silicio carbono', 'anodo', 'silicio_carbono'],
       ['silicio', 'anodo', 'silicio_puro'], ['litio metálico', 'anodo', 'litio_metalico'], ['litio metalico', 'anodo', 'litio_metalico'],
@@ -2403,7 +2438,7 @@ const Assistant = (() => {
   function autonomiaPorPerfil(r) {
     return Object.entries(PERFILES_USO).map(([key, p]) => ({
       key, nombre: p.nombre,
-      horas: (r.energiaWh * (r.eficienciaDescarga / 100)) / p.consumoW
+      horas: (r.energiaWh * (r.eficienciaDescarga / 100)) / (p.consumoW * r.chip.consumoFactor * r.dispositivo.consumoFactorDispositivo)
     }));
   }
 
